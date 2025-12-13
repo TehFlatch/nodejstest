@@ -1,0 +1,12 @@
+<div class="sidebar-header">
+  <h3>Realtime</h3>
+  <small>Live events</small>
+</div>
+
+<div class="messages">
+  <div *ngFor="let msg of messages()" class="message">
+    <div class="time">{{msg.time}}</div>
+    <div class="text">{{msg.text}}</div>
+  </div>
+  <div *ngIf="messages().length === 0" class="empty">No realtime events yet</div>
+</div>

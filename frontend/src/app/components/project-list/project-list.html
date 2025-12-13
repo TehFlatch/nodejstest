@@ -1,0 +1,59 @@
+<div style="padding: 20px; max-width: 1200px; margin: 0 auto">
+  <mat-card style="margin-bottom: 30px" class="slide-up">
+    <mat-card-header>
+      <mat-card-title>Create New Project</mat-card-title>
+    </mat-card-header>
+    <mat-card-content style="margin-top: 20px; display: flex; gap: 20px; align-items: baseline">
+      <mat-form-field appearance="fill" style="flex: 1">
+        <mat-label>Project Title</mat-label>
+        <input
+          matInput
+          [ngModel]="newProjectTitle()"
+          (ngModelChange)="newProjectTitle.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" style="flex: 2">
+        <mat-label>Description</mat-label>
+        <input matInput [ngModel]="newProjectDesc()" (ngModelChange)="newProjectDesc.set($event)" />
+      </mat-form-field>
+
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="createProject()"
+        [disabled]="!newProjectTitle().length"
+      >
+        <mat-icon>add</mat-icon> Create
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  @if (projects().length === 0) {
+  <div class="empty-state">
+    <mat-icon style="font-size: 64px; width: 64px; height: 64px; color: var(--text-tertiary)"
+      >folder_open</mat-icon
+    >
+    <h2 style="color: var(--text-secondary); font-weight: 400">No projects yet</h2>
+    <p style="color: var(--text-tertiary)">Create your first project to get started</p>
+  </div>
+  }
+
+  <div class="project-grid">
+    @for (project of projects(); track project.id) {
+    <mat-card class="project-card scale-on-hover" [routerLink]="['/projects', project.id]">
+      <mat-card-header>
+        <mat-card-title>{{ project.title }}</mat-card-title>
+        <mat-card-subtitle>
+          <span class="status-badge" [class.status-active]="project.status === 'active'">
+            {{ project.status }}
+          </span>
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{ project.description }}</p>
+      </mat-card-content>
+    </mat-card>
+    }
+  </div>
+</div>

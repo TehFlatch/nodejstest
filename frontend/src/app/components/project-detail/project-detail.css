@@ -1,0 +1,70 @@
+.project-header {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+}
+
+.project-header .mat-mdc-card-title,
+.project-header .mat-mdc-card-subtitle {
+    color: white !important;
+}
+
+.tasks-card {
+    animation: fadeIn 0.5s ease-in;
+}
+
+.task-item {
+    transition: background var(--transition-base);
+    animation: slideUp 0.3s ease-out;
+}
+
+.task-item:hover {
+    background: var(--bg-secondary);
+}
+
+.task-title {
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.task-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.task-status.status-todo {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning-color);
+}
+
+.task-status.status-done {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.delete-btn {
+    transition: all var(--transition-base);
+}
+
+.delete-btn:hover {
+    transform: scale(1.1);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    animation: fadeIn 0.5s ease-in;
+}
+
+.empty-state mat-icon {
+    margin-bottom: 12px;
+    opacity: 0.5;
+}

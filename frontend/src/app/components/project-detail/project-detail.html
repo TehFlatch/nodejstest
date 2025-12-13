@@ -1,0 +1,71 @@
+@if (project(); as proj) {
+<div style="padding: 20px; max-width: 900px; margin: 0 auto">
+  <mat-card style="margin-bottom: 30px" class="slide-up project-header">
+    <mat-card-header>
+      <mat-card-title style="font-size: 28px; margin-bottom: 8px">{{ proj.title }}</mat-card-title>
+      <mat-card-subtitle style="font-size: 16px">{{ proj.description }}</mat-card-subtitle>
+    </mat-card-header>
+  </mat-card>
+
+  <mat-card style="margin-bottom: 20px" class="slide-up">
+    <mat-card-header>
+      <mat-card-title>Add Task</mat-card-title>
+    </mat-card-header>
+    <mat-card-content style="display: flex; gap: 20px; align-items: baseline; margin-top: 10px">
+      <mat-form-field appearance="outline" style="flex: 1">
+        <mat-label>Task Name</mat-label>
+        <input
+          matInput
+          [ngModel]="newTaskTitle()"
+          (ngModelChange)="newTaskTitle.set($event)"
+          (keyup.enter)="addTask()"
+        />
+      </mat-form-field>
+      <button mat-flat-button color="primary" (click)="addTask()" [disabled]="!newTaskTitle()">
+        <mat-icon>add_task</mat-icon> Add
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="tasks-card">
+    <mat-card-header>
+      <mat-card-title>Tasks ({{ tasks().length }})</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (tasks().length === 0) {
+      <div class="empty-state">
+        <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: var(--text-tertiary)"
+          >task_alt</mat-icon
+        >
+        <p style="color: var(--text-secondary); margin: 12px 0 0 0">
+          No tasks yet. Add your first task above.
+        </p>
+      </div>
+      } @else {
+      <mat-list>
+        @for (task of tasks(); track task.id) {
+        <div class="task-item">
+          <mat-list-item>
+            <span matListItemTitle class="task-title">{{ task.title }}</span>
+            <span matListItemLine>
+              <span
+                class="task-status"
+                [class.status-todo]="task.status === 'todo'"
+                [class.status-done]="task.status === 'done'"
+              >
+                {{ task.status }}
+              </span>
+            </span>
+            <button mat-icon-button color="warn" (click)="deleteTask(task.id)" class="delete-btn">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+        </div>
+        }
+      </mat-list>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
+}

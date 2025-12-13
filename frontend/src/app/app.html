@@ -1,0 +1,20 @@
+<app-loader></app-loader>
+
+<mat-toolbar color="primary">
+  <span>Project Manager</span>
+  <span class="example-spacer" style="flex: 1 1 auto;"></span>
+  <button mat-button routerLink="/dashboard" routerLinkActive="active-link">Dashboard</button>
+  <button mat-button routerLink="/projects" routerLinkActive="active-link">Projects</button>
+</mat-toolbar>
+
+<div class="container" style="padding: 20px;">
+  <div class="layout">
+    <aside class="sidebar">
+      <app-sidebar></app-sidebar>
+    </aside>
+
+    <main class="main">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
