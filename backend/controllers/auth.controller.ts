@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { AppError } from '../utils/AppError';
 import prisma from '../config/prisma';
+import { env } from '../config/env';
+import { logger } from '../utils/logger';
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -11,6 +15,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         }
 
         // Transaction to ensure atomicity
+        const hashedPassword = await bcrypt.hash(password, 10);
         const result = await prisma.$transaction(async (tx) => {
             // Create Tenant
             const tenant = await tx.tenant.create({
@@ -24,7 +29,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             const user = await tx.user.create({
                 data: {
                     email,
-                    password, // In real app, hash this!
+                    password: hashedPassword,
                     name,
                     role: 'admin',
                     tenantId: tenant.id
@@ -41,10 +46,12 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
                 tenant: result.tenant
             }
         });
-    } catch (err: any) {
-        if (err.code === 'P2002') { // Unique constraint violation
+    } catch (err: unknown) {
+        if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') {
+            // Unique constraint violation
             return next(new AppError('Email or Tenant Slug already exists', 400));
         }
+        logger.error('Error registering user', err as Error);
         next(new AppError('Error registering user', 500));
     }
 };
@@ -62,12 +69,19 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             include: { tenant: true }
         });
 
-        if (!user || user.password !== password) {
+        if (!user || !(await bcrypt.compare(password, user.password))) {
             return next(new AppError('Incorrect email or password', 401));
         }
 
-        // Generate token (mocked)
-        const token = 'fake-jwt-token-for-' + user.id;
+        // Generate JWT token
+        // Type assertion needed because StringValue from 'ms' package is more specific than string
+        const token = jwt.sign(
+            { userId: user.id, tenantId: user.tenantId, role: user.role },
+            env.jwtSecret,
+            { expiresIn: env.jwtExpiresIn as any }
+        );
+        
+        logger.info('User logged in successfully', { userId: user.id, email: user.email });
 
         res.status(200).json({
             status: 'success',
@@ -84,6 +98,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             }
         });
     } catch (err) {
+        logger.error('Error logging in', err as Error);
         next(new AppError('Error logging in', 500));
     }
 };

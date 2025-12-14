@@ -1,6 +1,6 @@
 # Project Management Application - Complete Overview
 
-A full-stack project management application built with **Node.js/Express** (TypeScript) backend and **Angular 19** (standalone components, zoneless) frontend, featuring real-time updates via WebSockets and multi-tenant architecture.
+A full-stack project management application built with **Node.js/Express** (TypeScript) backend and **Angular 19** (standalone components, zoneless) frontend, featuring real-time updates via WebSockets, multi-tenant architecture, and secure authentication.
 
 ---
 
@@ -57,6 +57,26 @@ graph TB
 
 ---
 
+## Key Features
+
+### Multi-Tenancy
+- **Tenant Isolation**: Each tenant has separate data (projects, tasks, users) enforced via `tenantId` in database and `x-tenant-id` header.
+- **Seeded Data**: Includes 2 tenants ("Tenant A", "Tenant B") with admin/member users and sample projects/tasks.
+- **Frontend Support**: Automatic tenant context from login, stored in localStorage.
+
+### Authentication & Authorization
+- **JWT-Based Auth**: Secure login with bcrypt-hashed passwords, JWT tokens for session management.
+- **Role-Based Access**: Admin and member roles per tenant.
+- **Protected Routes**: Auth middleware on API endpoints, guard on frontend routes.
+- **Seeded Users**:
+  - Tenant A: `admin@tenant-a.com` / `admin123` (admin), `user@tenant-a.com` / `user123` (member)
+  - Tenant B: `admin@tenant-b.com` / `admin123` (admin), `user@tenant-b.com` / `user123` (member)
+
+### Real-Time Updates
+- WebSocket integration for live project/task changes.
+
+---
+
 ## Backend Architecture
 
 ### Directory Structure
@@ -92,7 +112,7 @@ backend/
 ├── workers/
 │   ├── heavy-computation.ts # Worker thread example
 │   └── queue.ts             # BullMQ queue system
-├── server.ts                # Express app entry point with clustering
+├── server.ts                # Express app entry point (single worker mode)
 └── package.json
 ```
 

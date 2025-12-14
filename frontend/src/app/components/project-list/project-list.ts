@@ -75,10 +75,11 @@ export class ProjectList implements OnInit {
       status: 'active',
     };
 
-    this.api.createProject(project).subscribe((res) => {
-      this.projects.update((current) => [...current, res]);
+    // Don't manually update - let socket event reload the list to prevent duplicates
+    this.api.createProject(project).subscribe(() => {
       this.newProjectTitle.set('');
       this.newProjectDesc.set('');
+      // Socket event will reload the list automatically
     });
   }
 }

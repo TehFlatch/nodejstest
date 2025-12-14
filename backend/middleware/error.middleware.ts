@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/AppError';
+import { logger } from '../utils/logger';
+import { env } from '../config/env';
 
 const sendErrorDev = (err: AppError, res: Response) => {
     res.status(err.statusCode).json({
@@ -17,8 +19,12 @@ const sendErrorProd = (err: AppError, res: Response) => {
             message: err.message
         });
     } else {
-        // Ensure the error is logged to console (use console.log per requirement)
-        console.log('ERROR 💥', err);
+        // Log the error with structured logging
+        logger.error('Unexpected error occurred', err, {
+            statusCode: err.statusCode,
+            message: err.message
+        });
+        
         res.status(500).json({
             status: 'error',
             message: 'Something went very wrong!'
@@ -26,26 +32,33 @@ const sendErrorProd = (err: AppError, res: Response) => {
     }
 };
 
-const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-    // Always log every error to the console so backend error visibility is guaranteed
-    try {
-        console.log('Global error handler caught error:', err);
-    } catch (loggingErr) {
-        // In case logging itself fails, fall back to a safe console output
-        // (avoid throwing from the error handler)
-        // eslint-disable-next-line no-console
-        console.log('Error while logging error:', loggingErr);
-    }
-    err.statusCode = err.statusCode || 500;
-    err.status = err.status || 'error';
-
-    // In a real app, use process.env.NODE_ENV
-    const env = 'development';
-
-    if (env === 'development') {
-        sendErrorDev(err, res);
+const errorHandler = (err: unknown, req: Request, res: Response, next: NextFunction) => {
+    // Convert unknown errors to AppError
+    let appError: AppError;
+    
+    if (err instanceof AppError) {
+        appError = err;
+    } else if (err instanceof Error) {
+        appError = new AppError(err.message, 500);
+        appError.stack = err.stack;
     } else {
-        sendErrorProd(err, res);
+        appError = new AppError('An unknown error occurred', 500);
+    }
+
+    // Always log every error
+    logger.error('Error caught by global handler', appError, {
+        path: req.path,
+        method: req.method,
+        statusCode: appError.statusCode,
+    });
+
+    appError.statusCode = appError.statusCode || 500;
+    appError.status = appError.status || 'error';
+
+    if (env.nodeEnv === 'development') {
+        sendErrorDev(appError, res);
+    } else {
+        sendErrorProd(appError, res);
     }
 };
 

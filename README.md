@@ -5,6 +5,7 @@
 A full-stack project management application with enterprise-grade architectural patterns:
 
 - ✅ **Multi-tenancy Support** - Tenant isolation at database level
+- ✅ **Authentication & Authorization** - JWT-based auth with role-based access (admin/member)
 - ✅ **Real-time WebSockets** - Socket.io integration for live updates
 - ✅ **Message Queues** - BullMQ with Redis for background jobs
 - ✅ **Event-Driven Architecture** - Domain events for decoupled communication
@@ -92,7 +93,13 @@ npx prisma db push
 npx prisma generate
 ```
 
-5. **Run Application**
+5. **Seed Database**
+```bash
+cd backend
+npm run db:seed
+```
+
+6. **Run Application**
 ```bash
 # Backend (in backend/)
 npm run dev
@@ -100,6 +107,20 @@ npm run dev
 # Frontend (in frontend/)
 npm start
 ```
+
+### Login Credentials
+
+After seeding, use these accounts to test multi-tenancy:
+
+- **Tenant A**:
+  - Admin: `admin@tenant-a.com` / `admin123`
+  - User: `user@tenant-a.com` / `user123`
+
+- **Tenant B**:
+  - Admin: `admin@tenant-b.com` / `admin123`
+  - User: `user@tenant-b.com` / `user123`
+
+Each tenant sees only their own projects and tasks.
 
 **Access:**
 - Frontend: http://localhost:4200

@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, input, signal, effect, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -9,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { ApiService } from '../../services/api.service';
+import { SocketService } from '../../services/socket.service';
 import { Project } from '../../interfaces/project.interface';
 import { Task } from '../../interfaces/task.interface';
 
@@ -39,6 +41,8 @@ export class ProjectDetail {
   newTaskTitle = signal<string>('');
 
   private api = inject(ApiService);
+  private socketService = inject(SocketService);
+  private destroyRef = inject(DestroyRef);
 
   constructor() {
     // React to ID changes automatically
@@ -47,8 +51,46 @@ export class ProjectDetail {
       if (projectId) {
         this.loadProject(+projectId);
         this.loadTasks(+projectId);
+        this.setupRealtimeListeners(+projectId);
       }
     });
+  }
+
+  private setupRealtimeListeners(projectId: number) {
+    // Listen for task events for this project
+    this.socketService
+      .onEvent<any>('task:created')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        if (data?.task?.projectId === projectId) {
+          this.tasks.update((tasks) => {
+            // Check if task already exists to prevent duplicates
+            const exists = tasks.some(t => t.id === data.task.id);
+            if (exists) return tasks;
+            return [...tasks, data.task];
+          });
+        }
+      });
+
+    this.socketService
+      .onEvent<any>('task:updated')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        if (data?.task?.projectId === projectId) {
+          this.tasks.update((tasks) =>
+            tasks.map((t) => (t.id === data.task.id ? data.task : t))
+          );
+        }
+      });
+
+    this.socketService
+      .onEvent<any>('task:deleted')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        if (data?.taskId) {
+          this.tasks.update((tasks) => tasks.filter((t) => t.id !== data.taskId));
+        }
+      });
   }
 
   loadProject(id: number) {
@@ -71,15 +113,17 @@ export class ProjectDetail {
       projectId: currentProject.id,
     };
 
-    this.api.createTask(task).subscribe((newTask) => {
-      this.tasks.update((tasks) => [...tasks, newTask]);
+    // Don't manually update - let socket event handle it to prevent duplicates
+    this.api.createTask(task).subscribe(() => {
       this.newTaskTitle.set('');
+      // Socket event will update the list automatically
     });
   }
 
   deleteTask(taskId: number) {
+    // Don't manually update - let socket event handle it to prevent duplicates
     this.api.deleteTask(taskId).subscribe(() => {
-      this.tasks.update((tasks) => tasks.filter((t) => t.id !== taskId));
+      // Socket event will update the list automatically
     });
   }
 }

@@ -7,9 +7,22 @@ import { notificationQueue } from '../workers/queue';
 export const getAllTasks = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const tenantId = req.tenantId;
+        const projectId = req.query.projectId ? Number(req.query.projectId) : undefined;
+        
+        const whereClause: any = {};
+        
+        if (tenantId) {
+            whereClause.tenantId = tenantId;
+        }
+        
+        if (projectId !== undefined && !isNaN(projectId)) {
+            whereClause.projectId = projectId;
+        }
+        
         const tasks = await prisma.task.findMany({
-            where: tenantId ? { tenantId } : {}
+            where: whereClause
         });
+        
         res.status(200).json({
             status: 'success',
             results: tasks.length,
@@ -24,6 +37,20 @@ export const createTask = async (req: Request, res: Response, next: NextFunction
     try {
         const { title, description, status, dueDate, projectId } = req.body;
         const tenantId = req.tenantId;
+
+        // If projectId is provided, verify it belongs to the same tenant
+        if (projectId && tenantId) {
+            const project = await prisma.project.findFirst({
+                where: {
+                    id: Number(projectId),
+                    tenantId: tenantId
+                }
+            });
+
+            if (!project) {
+                return next(new AppError('Project not found or does not belong to your tenant', 404));
+            }
+        }
 
         const newTask = await prisma.task.create({
             data: {

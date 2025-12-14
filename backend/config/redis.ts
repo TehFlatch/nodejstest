@@ -1,12 +1,17 @@
 import Redis from 'ioredis';
 import { logger } from '../utils/logger';
+import { env } from './env';
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+// Build Redis URL from environment configuration
+const redisUrl = env.redisPassword 
+    ? `redis://:${env.redisPassword}@${env.redisHost}:${env.redisPort}`
+    : `redis://${env.redisHost}:${env.redisPort}`;
 
 // Ensure `maxRetriesPerRequest` is `null` as required by BullMQ for blocking
 // commands (see BullMQ RedisConnection.checkBlockingOptions).
 const redisOptions = {
     maxRetriesPerRequest: null as unknown as number | null,
+    ...(env.redisPassword && { password: env.redisPassword }),
 };
 
 export const redis = new Redis(redisUrl, redisOptions);

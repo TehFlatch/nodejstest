@@ -9,9 +9,11 @@
 
 <div class="container" style="padding: 20px;">
   <div class="layout">
-    <aside class="sidebar">
-      <app-sidebar></app-sidebar>
-    </aside>
+    @if (isAdmin()) {
+      <aside class="sidebar">
+        <app-sidebar></app-sidebar>
+      </aside>
+    }
 
     <main class="main">
       <router-outlet></router-outlet>
